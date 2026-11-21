@@ -1,5 +1,8 @@
-import { PropsWithChildren, useCallback, useState } from 'react';
-import { AuthContext, UserModel } from '@/auth/context/auth-context';
+import { PropsWithChildren, useCallback, useEffect, useState } from 'react';
+import { AuthContext } from '@/auth/context/auth-context';
+import { UsuarioSesion } from '@/types/auth';
+import { authService } from '@/services/auth.service';
+import { estaVencido, leerToken } from '@/lib/jwt';
 
 /**
  * Proveedor de sesion LOCAL, de practica.
@@ -14,30 +17,64 @@ import { AuthContext, UserModel } from '@/auth/context/auth-context';
  * (RequireAuth, la cabecera, el menu) no se entera del cambio.
  */
 
-const USUARIO_DEMO = {
+/*const USUARIO_DEMO = {
   usuario: 'demo',
   contrasena: 'demo123',
-};
+};*/
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [loading] = useState(false);
-  const [user, setUser] = useState<UserModel | undefined>();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<UsuarioSesion | undefined>();
 
-  const login = useCallback(async (usuario: string, contrasena: string) => {
-    const coincide =
-      usuario === USUARIO_DEMO.usuario &&
-      contrasena === USUARIO_DEMO.contrasena;
+  const login = useCallback(async (usuario: string, contrasenia: string) => {
 
-    if (!coincide) {
-      throw new Error('Usuario o contrasena incorrectos.');
+    const token = await authService.login({usuario, contrasenia});
+    const payload = leerToken(token);
+
+    if(!payload) {
+      throw new Error('El token recibido no se pudo leer');
     }
 
-    setUser({ usuario });
+    authService.guardarToken(token);
+    const sesion = {
+      id: payload.id,
+      usuario: payload.usuario,
+      roles: payload.roles,
+    }
+    setUser(sesion);
   }, []);
 
-  const logout = useCallback(() => {
+  const tieneRol = useCallback(
+    (...roles: string[]): boolean => roles.some((rol): boolean | undefined => user?.roles.includes(rol)),
+    [user]
+  )
+
+  const logout = useCallback(() =>{
+    authService.borrarToken();
     setUser(undefined);
   }, []);
+
+
+
+  //para no perder el token al recargar el navegador con F5
+  useEffect(() => {
+    const token = authService.obtenerToken();
+    const payload = token? leerToken(token): null;
+    if(payload && !estaVencido(payload)){
+      setUser({
+        id: payload.id,
+        usuario: payload.usuario,
+        roles: payload.roles,
+      });
+      console.log('>>> sesion restaurada tras F5: ', payload.usuario);
+    }
+    else if (token){
+      authService.borrarToken();
+    }
+    setLoading(false);
+  }, [])
+
+
 
   return (
     <AuthContext.Provider
@@ -47,6 +84,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         user,
         login,
         logout,
+        tieneRol,
       }}
     >
       {children}

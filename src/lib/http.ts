@@ -9,6 +9,19 @@ export const http = axios.create({
     timeout:  10000, // 10 seg
 });
 
+
+//AGREGANDO DE IA
+// Agregar el token JWT a las peticiones protegidas
+http.interceptors.request.use((config) => {
+    const token = localStorage.getItem('cine_token');
+
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+});
+
 http.interceptors.response.use(
     // si sale bien
     (respuesta) => respuesta,

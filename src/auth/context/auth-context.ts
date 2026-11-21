@@ -1,18 +1,21 @@
+import { UsuarioSesion } from '@/types/auth';
 import { createContext, useContext } from 'react';
+//import { boolean } from 'zod';
 
 /** Usuario de la sesion. Por ahora solo un nombre para mostrar en pantalla. */
-export interface UserModel {
+/*export interface UserModel {
   usuario: string;
-}
+}*/
 
 interface AuthContextValue {
   /** true mientras se comprueba si hay sesion. Hoy nunca tarda, pero la
    *  pantalla de carga ya esta lista para cuando el login sea real. */
   loading: boolean;
   isAuthenticated: boolean;
-  user?: UserModel;
+  user?: UsuarioSesion;
   login: (usuario: string, contrasena: string) => Promise<void>;
   logout: () => void;
+  tieneRol: (...roles: string []) => boolean;
 }
 
 /**
@@ -29,6 +32,7 @@ export const AuthContext = createContext<AuthContextValue>({
   isAuthenticated: false,
   login: async () => {},
   logout: () => {},
+  tieneRol: (): false => false,
 });
 
 export function useAuth() {

@@ -1,21 +1,18 @@
 
-// get
-// catalogo de pelicula
+ // GET: catálogo de películas
 export interface Pelicula {
-  id: number;
+  id_pelicula: number;
   titulo: string;
   sinopsis: string;
-  duracionMinutos: number;
-  fechaEstreno: string;
+  duracion_minutos: number;
+  fecha_estreno: string;
   activo: boolean;
-  // Solo los nombres del archivo, no las imagenes
-  // URL se armando con {apiUrl}/files/pelicula/{nombre}
+  // Solo los nombres de los archivos, no las imágenes
+  // URL: {apiUrl}/files/pelicula/{nombre}
   imagenes: string[];
 }
 
-// Es generico es un hueco que rrelena al usarlo
-// asi la RespuestaPaginada<Pelicula> sirvir para las peliculas
-
+// Respuesta genérica para listados paginados
 export interface RespuestaPaginada<T> {
   status: string;
   message?: string;
@@ -24,4 +21,13 @@ export interface RespuestaPaginada<T> {
   pagina: number;
   porPagina: number;
   totalPaginas: number;
+}
+
+// POST: datos para registrar una película
+export interface CrearPelicula {
+  titulo: string;
+  sinopsis: string;
+  duracion_minutos: number;
+  fecha_estreno: string;
+  activo: boolean;
 }
